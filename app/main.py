@@ -5,16 +5,14 @@ from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 
 DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
-SEMAPHORE_TRIGGER_URL = os.getenv("SEMAPHORE_TRIGGER_URL")
+SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL")
+SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL")
 
-# Map Discord button custom_ids to header keys
-# Example: run_vms → vms-lxcs-update
-custom_id_map = {}
-raw_map = os.getenv("DISCORD_CUSTOM_ID_MAP", "")
-for entry in raw_map.split(","):
-    if "=" in entry:
-        custom_id, header_key = entry.strip().split("=", 1)
-        custom_id_map[custom_id] = header_key
+# Map button custom_id to corresponding Semaphore trigger URL
+TRIGGER_URLS = {
+    "run_vms_lxcs_update": SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL,
+    "run_pve_clusters_update": SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL,
+}
 
 app = FastAPI()
 
@@ -26,7 +24,7 @@ async def interactions(
 ):
     body = await request.body()
 
-    # Verify Discord signature
+    # Validate Discord Signature
     try:
         verify_key = VerifyKey(bytes.fromhex(DISCORD_PUBLIC_KEY))
         verify_key.verify(
@@ -38,32 +36,20 @@ async def interactions(
 
     data = await request.json()
 
-    # Discord PING
     if data["type"] == 1:
         return {"type": 1}
 
-    # Button interaction
+    # Handle Button Interaction
     if data["type"] == 3:
         custom_id = data["data"]["custom_id"]
-        header_key = custom_id_map.get(custom_id)
+        trigger_url = TRIGGER_URLS.get(custom_id)
 
-        if header_key:
+        if trigger_url:
             try:
-                headers = {header_key: "true"}
-
                 async with httpx.AsyncClient() as client:
-                    await client.post(SEMAPHORE_TRIGGER_URL, headers=headers)
-
-                return {
-                    "type": 4,
-                    "data": {
-                        "content": f"✅ Triggered playbook: **{header_key}**",
-                        "flags": 64  # ephemeral response
-                    }
-                }
-
+                    await client.post(trigger_url)
             except Exception as e:
-                print(f"[X] Semaphore trigger failed for '{custom_id}':", e)
+                print(f"Error triggering Semaphore for {custom_id}: {str(e)}")
                 return {
                     "type": 4,
                     "data": {
@@ -72,5 +58,12 @@ async def interactions(
                     }
                 }
 
-    # Fallback for unsupported actions
+            return {
+                "type": 4,
+                "data": {
+                    "content": f"✅ Update playbook triggered via Semaphore for **{custom_id}**!",
+                    "flags": 64
+                }
+            }
+
     return {"type": 5}
