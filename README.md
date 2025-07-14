@@ -55,6 +55,8 @@ docker run -e DISCORD_PUBLIC_KEY=your_discord_app_public_key_here -p 8000:8000 s
 - `POST /interactions`  
   Handles Discord interaction payloads. Verifies signatures and responds to pings and custom component interactions.
 
+- Needs to be hosted with an publicly over HTTPs, the easiest method is to put behind a reverse-proxy.
+
 ## GitHub Actions
 
 - **docker-build-test.yml**: Builds the Docker image for pull requests to `main` (no push).
