@@ -1,9 +1,10 @@
 import os
+import re
 import httpx
+import asyncio
 from fastapi import FastAPI, Request, Header, HTTPException
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
-import re
 
 DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
 
@@ -51,25 +52,24 @@ async def interactions(
             target_url = SEMAPHORE_TARGETS.get(target_index)
 
             if target_url:
-                try:
-                    async with httpx.AsyncClient() as client:
-                        await client.post(target_url)
-                except Exception as e:
-                    print(f"Error triggering Semaphore {custom_id}:", e)
-                    return {
-                        "type": 4,
-                        "data": {
-                            "content": f"❌ Failed to trigger update via Semaphore...",
-                            "flags": 64
-                        }
-                    }
-
+                # Run Semaphore trigger in background to avoid timeout
+                asyncio.create_task(trigger_semaphore(target_url, custom_id))
+                
                 return {
                     "type": 4,
                     "data": {
-                        "content": f"✅ Playbook triggered via Semaphore!",
-                        "flags": 64
+                        "content": f"✅ Playbook triggered for **{custom_id.replace('_', ' ').title()}**!",
+                        "flags": 64  # ephemeral
                     }
                 }
 
     return {"type": 5}
+
+
+async def trigger_semaphore(url: str, custom_id: str):
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(url)
+        print(f"[✓] Triggered Semaphore for {custom_id} → {url}")
+    except Exception as e:
+        print(f"[X] Failed to trigger Semaphore for {custom_id}: {e}")
