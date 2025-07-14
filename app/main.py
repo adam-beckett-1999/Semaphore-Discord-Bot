@@ -8,12 +8,6 @@ DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
 SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL")
 SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL")
 
-# Map button custom_id to corresponding Semaphore trigger URL
-TRIGGER_URLS = {
-    "run_vms_lxcs_update": SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL,
-    "run_pve_clusters_update": SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL,
-}
-
 app = FastAPI()
 
 @app.post("/interactions")
@@ -42,18 +36,17 @@ async def interactions(
     # Handle Button Interaction
     if data["type"] == 3:
         custom_id = data["data"]["custom_id"]
-        trigger_url = TRIGGER_URLS.get(custom_id)
 
-        if trigger_url:
+        if custom_id == "run_pve_clusters_update":
             try:
                 async with httpx.AsyncClient() as client:
-                    await client.post(trigger_url)
+                    await client.post(SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL)
             except Exception as e:
-                print(f"Error triggering Semaphore for {custom_id}: {str(e)}")
+                print(f"Error triggering PVE update:", e)
                 return {
                     "type": 4,
                     "data": {
-                        "content": f"❌ Failed to trigger update: {e}",
+                        "content": f"❌ Failed to trigger Proxmox update: {e}",
                         "flags": 64
                     }
                 }
@@ -61,9 +54,32 @@ async def interactions(
             return {
                 "type": 4,
                 "data": {
-                    "content": f"✅ Update playbook triggered via Semaphore for **{custom_id}**!",
+                    "content": "✅ Proxmox update triggered via Semaphore!",
                     "flags": 64
                 }
             }
 
+        elif custom_id == "run_vms_lxcs_update":
+            try:
+                async with httpx.AsyncClient() as client:
+                    await client.post(SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL)
+            except Exception as e:
+                print(f"Error triggering VMs/LXCs update:", e)
+                return {
+                    "type": 4,
+                    "data": {
+                        "content": f"❌ Failed to trigger VMs/LXCs update: {e}",
+                        "flags": 64
+                    }
+                }
+
+            return {
+                "type": 4,
+                "data": {
+                    "content": "✅ VMs & LXC update triggered via Semaphore!",
+                    "flags": 64
+                }
+            }
+
+    # Default fallback for unknown interactions
     return {"type": 5}
