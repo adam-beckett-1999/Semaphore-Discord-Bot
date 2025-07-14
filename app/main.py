@@ -6,7 +6,6 @@ from nacl.exceptions import BadSignatureError
 
 DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
 SEMAPHORE_TRIGGER_URL = os.getenv("SEMAPHORE_TRIGGER_URL")
-SEMAPHORE_TRIGGER_TOKEN = os.getenv("SEMAPHORE_TRIGGER_TOKEN")
 
 app = FastAPI()
 
@@ -37,9 +36,8 @@ async def interactions(
     if data["type"] == 3 and data["data"]["custom_id"] == "run_update":
         # Trigger Semaphore build
         try:
-            headers = {"Authorization": f"Token {SEMAPHORE_TRIGGER_TOKEN}"} if SEMAPHORE_TRIGGER_TOKEN else {}
             async with httpx.AsyncClient() as client:
-                await client.post(SEMAPHORE_TRIGGER_URL, headers=headers)
+                await client.post(SEMAPHORE_TRIGGER_URL)
         except Exception as e:
             print("Error triggering Semaphore:", str(e))
             return {
@@ -59,4 +57,5 @@ async def interactions(
         }
 
     return {"type": 5}
+
 
