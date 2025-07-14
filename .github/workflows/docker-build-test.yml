@@ -1,9 +1,9 @@
-name: Docker Build Test
+name: Build Test for PR
 
 on:
   pull_request:
     branches:
-      - dev
+      - main
 
 jobs:
   docker-build:
