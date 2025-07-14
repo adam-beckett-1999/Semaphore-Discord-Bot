@@ -1,19 +1,20 @@
 import os
-import re
 import httpx
-import asyncio
 from fastapi import FastAPI, Request, Header, HTTPException
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 
 DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
+SEMAPHORE_TRIGGER_URL = os.getenv("SEMAPHORE_TRIGGER_URL")
+SEMAPHORE_HEADER_NAME = os.getenv("SEMAPHORE_HEADER_NAME", "X-Semaphore-Matcher")
 
-# Preload all semaphore trigger URLs by index
-SEMAPHORE_TARGETS = {
-    key.replace("SEMAPHORE_URL_", "").lower(): value
-    for key, value in os.environ.items()
-    if key.startswith("SEMAPHORE_URL_")
-}
+# Map Discord custom_id to header values
+custom_id_map = {}
+raw_map = os.getenv("DISCORD_CUSTOM_ID_MAP", "")
+for entry in raw_map.split(","):
+    if "=" in entry:
+        custom_id, matcher_value = entry.strip().split("=", 1)
+        custom_id_map[custom_id] = matcher_value
 
 app = FastAPI()
 
@@ -37,39 +38,40 @@ async def interactions(
 
     data = await request.json()
 
-    # Respond to Discord PING check
+    # Respond to Discord PING
     if data["type"] == 1:
         return {"type": 1}
 
-    # Handle button interaction
+    # Handle interaction
     if data["type"] == 3:
         custom_id = data["data"]["custom_id"]
+        matcher_value = custom_id_map.get(custom_id)
 
-        # Match buttons like "semaphore_1", "semaphore_2"
-        match = re.fullmatch(r"semaphore_(\d+)", custom_id)
-        if match:
-            target_index = match.group(1)
-            target_url = SEMAPHORE_TARGETS.get(target_index)
+        if matcher_value:
+            try:
+                # Build combined header value
+                header_value = f"key={matcher_value}, value={matcher_value}"
+                headers = {SEMAPHORE_HEADER_NAME: header_value}
 
-            if target_url:
-                # Run Semaphore trigger in background to avoid timeout
-                asyncio.create_task(trigger_semaphore(target_url, custom_id))
-                
+                async with httpx.AsyncClient() as client:
+                    await client.post(SEMAPHORE_TRIGGER_URL, headers=headers)
+
+            except Exception as e:
+                print(f"[X] Failed to trigger Semaphore for '{custom_id}': {e}")
                 return {
                     "type": 4,
                     "data": {
-                        "content": f"✅ Playbook triggered for **{custom_id.replace('_', ' ').title()}**!",
-                        "flags": 64  # ephemeral
+                        "content": f"❌ Failed to trigger update: {e}",
+                        "flags": 64
                     }
                 }
 
+            return {
+                "type": 4,
+                "data": {
+                    "content": f"✅ Triggered playbook",
+                    "flags": 64
+                }
+            }
+
     return {"type": 5}
-
-
-async def trigger_semaphore(url: str, custom_id: str):
-    try:
-        async with httpx.AsyncClient() as client:
-            await client.post(url)
-        print(f"[✓] Triggered Semaphore for {custom_id} → {url}")
-    except Exception as e:
-        print(f"[X] Failed to trigger Semaphore for {custom_id}: {e}")
