@@ -59,7 +59,7 @@ async def interactions(
                     return {
                         "type": 4,
                         "data": {
-                            "content": f"❌ Failed to trigger update for **{custom_id}**: {e}",
+                            "content": f"❌ Failed to trigger update via Semaphore...",
                             "flags": 64
                         }
                     }
@@ -67,7 +67,7 @@ async def interactions(
                 return {
                     "type": 4,
                     "data": {
-                        "content": f"✅ Update triggered for **{custom_id.replace('_', ' ').title()}**!",
+                        "content": f"✅ Playbook triggered via Semaphore!",
                         "flags": 64
                     }
                 }
