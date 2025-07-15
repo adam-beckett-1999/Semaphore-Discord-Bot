@@ -7,6 +7,7 @@ from nacl.exceptions import BadSignatureError # type: ignore
 DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
 SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL")
 SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL")
+SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL")
 
 app = FastAPI()
 
@@ -77,6 +78,28 @@ async def interactions(
                 "type": 4,
                 "data": {
                     "content": "✅ VMs & LXC update triggered via Semaphore!",
+                    "flags": 64
+                }
+            }
+
+        elif custom_id == "run_physical_hosts_update":
+            try:
+                async with httpx.AsyncClient() as client:
+                    await client.post(SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL)
+            except Exception as e:
+                print(f"Error triggering Physical Hosts update:", e)
+                return {
+                    "type": 4,
+                    "data": {
+                        "content": f"❌ Failed to trigger Physical Hosts update: {e}",
+                        "flags": 64
+                    }
+                }
+
+            return {
+                "type": 4,
+                "data": {
+                    "content": "✅ Physical Hosts update triggered via Semaphore!",
                     "flags": 64
                 }
             }

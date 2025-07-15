@@ -44,6 +44,7 @@ This minimal FastAPI-based Discord bot handles Discord interactions and triggers
    DISCORD_PUBLIC_KEY=your_discord_app_public_key_here
    SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
+   SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    ```
 
 ## Running Locally
