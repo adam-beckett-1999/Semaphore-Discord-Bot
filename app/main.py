@@ -1,8 +1,8 @@
 import os
-import httpx
-from fastapi import FastAPI, Request, Header, HTTPException
-from nacl.signing import VerifyKey
-from nacl.exceptions import BadSignatureError
+import httpx # type: ignore
+from fastapi import FastAPI, Request, Header, HTTPException # type: ignore
+from nacl.signing import VerifyKey # type: ignore
+from nacl.exceptions import BadSignatureError # type: ignore
 
 DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
 SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL")
