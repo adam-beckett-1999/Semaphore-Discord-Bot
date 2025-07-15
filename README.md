@@ -6,6 +6,10 @@ A Discord bot that bridges Discord interactions with SemaphoreUI automation, all
 
 This minimal FastAPI-based Discord bot handles Discord interactions and triggers Ansible playbooks in SemaphoreUI (https://semaphoreui.com/) via custom component interactions.
 
+![Bot Demo](demo.gif)
+
+*Interactive Discord bot triggering infrastructure automation through SemaphoreUI*
+
 ## Features
 
 - 🔐 Secure Discord interaction verification using Ed25519 signatures
