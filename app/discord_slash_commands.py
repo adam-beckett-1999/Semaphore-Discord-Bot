@@ -4,7 +4,7 @@ from discord.ext import commands # type: ignore
 import aiohttp # type: ignore
 import os
 
-# Replace with your bot token and webhook URLs
+# Replace with your bot token, webhook URLs, and your test guild ID
 token = os.getenv('DISCORD_SEMAPHORE_CONTROL_BOT_TOKEN')
 webhook_urls = {
     'Generate Update-Report for VMs & LXCs': os.getenv('SEMAPHORE_VMS_LXCS_UPDATE_REPORT_TRIGGER_URL'),
@@ -12,8 +12,11 @@ webhook_urls = {
     'Generate Update-Report for Physical Hosts': os.getenv('SEMAPHORE_PHYSICAL_HOSTS_UPDATE_REPORT_TRIGGER_URL'),
     'Update VMs & LXCs': os.getenv('SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL'),
     'Update PVE Clusters': os.getenv('SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL'),
-    'Update Physical Hosts': os.getenv('SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL'),  # Optional: if you want to sync commands to a specific guild
+    'Update Physical Hosts': os.getenv('SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL'),
 }
+
+# Set your test guild ID here for faster command sync during development
+GUILD_ID = int(os.getenv('DISCORD_SERVER_ID', '0'))  # Set this env var to your test guild ID
 
 class WebhookButton(discord.ui.Button):
     def __init__(self, label: str, webhook_url: str):
@@ -45,7 +48,12 @@ class MyBot(commands.Bot):
         await interaction.response.send_message("Select a playbook to trigger:", view=WebhookView(), ephemeral=True)
 
     async def setup_hook(self):
-        await self.tree.sync()
+        # Force guild-specific sync for faster updates and to avoid signature mismatch
+        if GUILD_ID:
+            guild = discord.Object(id=GUILD_ID)
+            await self.tree.sync(guild=guild)
+        else:
+            await self.tree.sync()
 
 if __name__ == "__main__":
     bot = MyBot()
