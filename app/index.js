@@ -128,19 +128,12 @@ client.once('ready', () => {
 
 client.on(Events.InteractionCreate, async interaction => {
   if (interaction.type === InteractionType.ApplicationCommand && interaction.commandName === 'playbooks') {
-    // Build a message with category descriptions
-    let content = '**Semaphore Playbooks**\n\n';
-    buttonGroups.forEach(group => {
-      content += `__${group.category}__\n${group.description}\n`;
-      group.buttons.forEach(btn => {
-        content += `> ${btn.emoji} **${btn.label}**\n`;
-      });
-      content += '\n';
-    });
-
-    // Create rows of buttons for each group (max 5 per row)
+    // Build a message with category headers and descriptions only
+    let content = '**Semaphore Playbooks**\n';
     const rows = [];
     buttonGroups.forEach(group => {
+      content += `\n__${group.category}__\n${group.description}\n`;
+      // Create rows of buttons for this group (max 5 per row)
       const groupButtons = group.buttons.map(btn =>
         new ButtonBuilder()
           .setCustomId(btn.customId)
