@@ -42,8 +42,7 @@ This project now includes:
 
    Create a `.env` file in the project root:
    ```
-   DISCORD_SEMAPHORE_POST_PUBLIC_KEY=your_discord_app_public_key_here (Bot 1: Interactions Endpoint)
-   DISCORD_SEMAPHORE_CONTROL_BOT_TOKEN=your_discord_bot_token_here (Bot 2: Slash Commands)
+   DISCORD_SEMAPHORE_CONTROL_BOT_TOKEN=your_discord_bot_token_here
    SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
@@ -54,77 +53,36 @@ This project now includes:
 
 ## Running Locally
 
-To run the FastAPI endpoint:
-```sh
-uvicorn app.interactions_endpoint:app --reload
-```
-
-To run the discord.py bot:
+To run the bot:
 ```sh
 python app/discord_slash_commands.py
 ```
 
 ## Docker
 
-Build and run the container (both FastAPI and discord.py bot will run together using Supervisor):
+Build and run the container:
 
 ```sh
-docker build -t semaphore-discord-bot .
-docker run --env-file .env -p 8000:8000 semaphore-discord-bot
+docker build -t semaphore-discord-command-bot .
+docker run --env-file .env semaphore-discord-command-bot
 ```
 
 ## Endpoints
 
-- `POST /interactions`  
-  Handles Discord interaction payloads (FastAPI). Verifies signatures and responds to pings and custom component interactions.
-
 - Discord slash command `/playbooks`  
-  Brings up a menu of buttons in Discord to trigger SemaphoreUI webhooks (discord.py bot).
-
-- Needs to be hosted publicly over HTTPS, the easiest method is to put behind a reverse-proxy (for FastAPI endpoint).
+  Brings up a menu of buttons in Discord to trigger SemaphoreUI webhooks.
 
 ## How It Works
 
-1. **Ansible playbooks** can send Discord messages with interactive buttons to channels (handled by FastAPI endpoint)
-2. **Users can also use the `/webhooks` slash command** in Discord to bring up interactive buttons (handled by discord.py bot)
-3. **Users click buttons** in Discord to trigger playbooks
-4. **Bot receives the interaction, verifies the signature (FastAPI) or handles via gateway (discord.py), and calls SemaphoreUI webhooks**
-5. **SemaphoreUI** executes the corresponding Ansible playbooks
-6. **Users receive feedback** in Discord about the operation status
+1. **Users can also use the `/webhooks` slash command** in Discord to bring up interactive buttons (handled by discord.py bot)
+2. **Users click buttons** in Discord to trigger playbooks
+3. **Bot receives the interaction, handles via gateway (discord.py), and calls SemaphoreUI webhooks**
+4. **SemaphoreUI** executes the corresponding Ansible playbooks
+5. **Users receive feedback** in Discord about the operation status
 
 ## Ansible Playbooks
 
 This ties in with my playbooks and roles which can be found here: https://github.com/adam-beckett-1999/Ansible-Playbooks
-
-Example role: https://github.com/adam-beckett-1999/Ansible-Playbooks/blob/dev/roles/update-report-aggregated-alert/tasks/main.yml
-
-```yaml
-- name: Send Discord prompt with styled embed and interactive button via bot API
-  uri:
-    url: "{{ discord_channel_url }}"
-    method: POST
-    headers:
-      Content-Type: "application/json"
-      Authorization: "Bot {{ discord_bot_token }}"
-    body_format: json
-    body:
-      embeds:
-        - title: "⚙️ Update Playbook Trigger"
-          description: "Do you want to trigger the update playbook now?\nClick the button below to start the update process."
-          color: 3447003
-          footer:
-            text: "Triggered from Ansible"
-      components:
-        - type: 1
-          components:
-            - type: 2
-              style: 1
-              label: "Run Update Playbook"
-              custom_id: "{{ custom_id }}"
-  run_once: true
-```
-
-The custom_id would match with the button interaction function, so that when the button is pressed, it calls the webhook URL configured via environment variable that matches with it, triggering the playbook in Semaphore (FastAPI endpoint). For the discord.py bot, use the `/webhooks` command to bring up interactive playbook buttons.
 
 ## Contributing
 
