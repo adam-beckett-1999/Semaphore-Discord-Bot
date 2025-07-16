@@ -148,7 +148,7 @@ client.on(Events.InteractionCreate, async interaction => {
       .setStyle(ButtonStyle.Secondary);
     const closeRow = new ActionRowBuilder().addComponents(closeButton);
     await interaction.reply({
-      content: '**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
+      content: '\n**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
       components: [row, closeRow],
       ephemeral: true,
     });
@@ -164,7 +164,7 @@ client.on(Events.InteractionCreate, async interaction => {
       return;
     }
     // Build submenu with buttons for this category
-    let content = `**${group.category}**\n${group.description}`;
+    let content = `\n**${group.category}**\n\n${group.description}\n\n*Choose an action below:*`;
     const groupButtons = group.buttons.map(btn =>
       new ButtonBuilder()
         .setCustomId(btn.customId)
@@ -209,7 +209,7 @@ client.on(Events.InteractionCreate, async interaction => {
       .setStyle(ButtonStyle.Secondary);
     const closeRow = new ActionRowBuilder().addComponents(closeButton);
     await interaction.update({
-      content: '**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
+      content: '\n**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
       components: [row, closeRow],
     });
     return;
