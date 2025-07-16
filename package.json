@@ -1,0 +1,25 @@
+{
+  "name": "semaphore-discord-commands-bot",
+  "version": "1.0.0",
+  "description": "Discord bot for triggering Semaphore playbooks via slash commands and buttons.",
+  "main": "app/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app/index.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "lint": "eslint app/*.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.31.0",
+    "jest": "^30.0.4"
+  }
+}

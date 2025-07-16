@@ -1,20 +1,20 @@
 
-FROM python:3.11-slim
+FROM node:lts-slim
 
 WORKDIR /app
 
+# Copy package.json and package-lock.json if present
+COPY package*.json ./
+
 # Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN npm install --omit=dev
 
 # Copy app code
 COPY app/ ./app
 
-# Install supervisor to run multiple processes
-RUN pip install supervisor
+# Healthcheck: check if the bot process is running
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD pgrep -f "node app/index.js" || exit 1
 
-# Add supervisor config
-COPY supervisord.conf ./
-
-# Default: Start both FastAPI and discord.py bot using supervisor
-CMD ["supervisord", "-c", "/app/supervisord.conf"]
+# Start the discord.js bot directly
+CMD ["node", "app/index.js"]

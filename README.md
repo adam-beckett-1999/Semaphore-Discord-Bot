@@ -1,12 +1,11 @@
+
 # Semaphore-Discord-Bot
 
 A Discord bot that bridges Discord interactions with SemaphoreUI automation, allowing users to trigger Ansible playbooks directly from Discord using interactive buttons.
 
 ## Overview
 
-
-This project now includes:
-- A persistent Discord bot (`app/discord_slash_commands.py`) using discord.py, supporting slash commands and interactive buttons to trigger SemaphoreUI webhooks directly from Discord.
+This project is implemented in **Node.js** using [discord.js](https://discord.js.org/). It provides a persistent Discord bot that supports slash commands and interactive buttons to trigger SemaphoreUI webhooks directly from Discord.
 
 ![Bot Demo](demo.gif)
 
@@ -20,7 +19,7 @@ This project now includes:
 
 ## Requirements
 
-- Python 3.11+
+- Node.js 18+ (or latest LTS)
 - Docker (optional, for containerized deployment)
 - A Discord application with a bot token
 - SemaphoreUI environment with configured 'Integrations' for your playbooks
@@ -35,7 +34,7 @@ This project now includes:
 
 2. **Install dependencies:**
    ```sh
-   pip install -r requirements.txt
+   npm install
    ```
 
 3. **Configure environment variables:**
@@ -43,6 +42,8 @@ This project now includes:
    Create a `.env` file in the project root:
    ```
    DISCORD_SEMAPHORE_CONTROL_BOT_TOKEN=your_discord_bot_token_here
+   DISCORD_CLIENT_ID=your_discord_client_id_here
+   DISCORD_SERVER_ID=your_discord_server_id_here
    SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
@@ -55,7 +56,7 @@ This project now includes:
 
 To run the bot:
 ```sh
-python app/discord_slash_commands.py
+npm start
 ```
 
 ## Docker
@@ -74,9 +75,9 @@ docker run --env-file .env semaphore-discord-command-bot
 
 ## How It Works
 
-1. **Users can also use the `/webhooks` slash command** in Discord to bring up interactive buttons (handled by discord.py bot)
+1. **Users use the `/playbooks` slash command** in Discord to bring up interactive buttons
 2. **Users click buttons** in Discord to trigger playbooks
-3. **Bot receives the interaction, handles via gateway (discord.py), and calls SemaphoreUI webhooks**
+3. **Bot receives the interaction, handles via gateway (discord.js), and calls SemaphoreUI webhooks**
 4. **SemaphoreUI** executes the corresponding Ansible playbooks
 5. **Users receive feedback** in Discord about the operation status
 
