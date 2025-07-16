@@ -6,7 +6,6 @@ import os
 
 # Replace with your bot token and webhook URLs
 token = os.getenv('DISCORD_SEMAPHORE_CONTROL_BOT_TOKEN')
-guild_id = int(os.getenv('DISCORD_SEMAPHORE_CONTROL_BOT_GUILD_ID', 0))  # Optional: if you want to sync commands to a specific guild
 webhook_urls = {
     'Generate Update-Report for VMs & LXCs': os.getenv('SEMAPHORE_VMS_LXCS_UPDATE_REPORT_TRIGGER_URL'),
     'Generate Update-Report for PVE Clusters': os.getenv('SEMAPHORE_PVE_CLUSTERS_UPDATE_REPORT_TRIGGER_URL'),
@@ -46,9 +45,7 @@ class MyBot(commands.Bot):
         await interaction.response.send_message("Select a playbook to trigger:", view=WebhookView(), ephemeral=True)
 
     async def setup_hook(self):
-        GUILD_ID = 123456789012345678  # replace with your test server's ID
-        guild = discord.Object(id=GUILD_ID)
-        await self.tree.sync(guild=guild)
+        await self.tree.sync()
 
 if __name__ == "__main__":
     bot = MyBot()
