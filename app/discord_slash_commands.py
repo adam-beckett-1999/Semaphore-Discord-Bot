@@ -41,10 +41,13 @@ class MyBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
         super().__init__(command_prefix="!", intents=intents)
-        self.tree.add_command(self.playbooks)
+        self.tree.add_command(self.playbooks2)
 
     @app_commands.command(name="playbooks", description="Show Semaphore playbook buttons.")
     async def playbooks(self, interaction: Interaction):  # <-- rename here
+        await interaction.response.send_message("Select a playbook to trigger:", view=WebhookView(), ephemeral=True)
+    @app_commands.command(name="playbooks2", description="Show Semaphore playbook buttons.")
+    async def playbooks2(self, interaction: Interaction):
         await interaction.response.send_message("Select a playbook to trigger:", view=WebhookView(), ephemeral=True)
 
     async def setup_hook(self):
