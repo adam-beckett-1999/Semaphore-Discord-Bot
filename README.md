@@ -6,7 +6,6 @@ A Discord bot that bridges Discord interactions with SemaphoreUI automation, all
 
 
 This project now includes:
-- A FastAPI-based endpoint (`app/interactions_endpoint.py`) for handling Discord interactions and triggering Ansible playbooks in SemaphoreUI (https://semaphoreui.com/) via custom component interactions.
 - A persistent Discord bot (`app/discord_slash_commands.py`) using discord.py, supporting slash commands and interactive buttons to trigger SemaphoreUI webhooks directly from Discord.
 
 ![Bot Demo](demo.gif)
@@ -15,17 +14,15 @@ This project now includes:
 
 ## Features
 
-- Secure Discord interaction verification using Ed25519 signatures (FastAPI endpoint)
-- Trigger SemaphoreUI playbooks via Discord button interactions (both FastAPI and discord.py bot)
-- Slash command `/playbooks` in Discord to bring up interactive playbook buttons (discord.py bot)
-- Docker deployment ready (runs both FastAPI and discord.py bot in one container)
-- Async FastAPI backend for high performance
+- Trigger SemaphoreUI playbooks via Discord button interactions
+- Slash command `/playbooks` in Discord to bring up interactive playbook buttons
+- Docker deployment ready
 
 ## Requirements
 
 - Python 3.11+
 - Docker (optional, for containerized deployment)
-- A Discord application with a public key and bot token
+- A Discord application with a bot token
 - SemaphoreUI environment with configured 'Integrations' for your playbooks
 
 ## Setup

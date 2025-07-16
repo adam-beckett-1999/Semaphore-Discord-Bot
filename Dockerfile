@@ -10,9 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy app code
 COPY app/ ./app
 
-# Expose port for FastAPI (optional for discord.py bot)
-EXPOSE 8000
-
 # Install supervisor to run multiple processes
 RUN pip install supervisor
 
