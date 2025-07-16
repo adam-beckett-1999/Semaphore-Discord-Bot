@@ -17,6 +17,7 @@ webhook_urls = {
 
 # Set your test guild ID here for faster command sync during development
 GUILD_ID = int(os.getenv('DISCORD_SERVER_ID', '0'))  # Set this env var to your test guild ID
+print(f"[DEBUG] GUILD_ID is set to: {GUILD_ID}")
 
 class WebhookButton(discord.ui.Button):
     def __init__(self, label: str, webhook_url: str):
