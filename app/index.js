@@ -147,11 +147,13 @@ client.on(Events.InteractionCreate, async interaction => {
       .setLabel('❌ Close')
       .setStyle(ButtonStyle.Secondary);
     const closeRow = new ActionRowBuilder().addComponents(closeButton);
-    await interaction.reply({
+    const reply = await interaction.reply({
       content: '\n**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
       components: [row, closeRow],
-      flags: 64, // Make ephemeral
+      fetchReply: true
     });
+    // Store the message for later deletion if needed
+    interaction._mainMsg = reply;
     return;
   }
 
@@ -218,6 +220,13 @@ client.on(Events.InteractionCreate, async interaction => {
   // Handle close button
   if (interaction.isButton() && interaction.customId === 'close_menu') {
     await interaction.update({ content: 'Menu closed.', components: [] });
+    setTimeout(async () => {
+      try {
+        await interaction.message.delete();
+      } catch (e) {
+        // Ignore if already deleted or missing permissions
+      }
+    }, 5000);
     return;
   }
 
@@ -226,18 +235,36 @@ client.on(Events.InteractionCreate, async interaction => {
     const label = interaction.customId.replace('webhook_', '');
     const webhookUrl = webhookUrls[label];
     if (!webhookUrl) {
-      await interaction.reply({ content: 'Webhook URL not found.', flags: 64 });
+      const reply = await interaction.reply({ content: 'Webhook URL not found.' });
+      setTimeout(async () => {
+        try {
+          await reply.delete();
+        } catch (e) {}
+      }, 5000);
       return;
     }
     try {
       const resp = await fetch(webhookUrl, { method: 'POST' });
+      let reply;
       if (resp.ok) {
-        await interaction.reply({ content: `Running Playbook for: ${label}!`, flags: 64 });
+        reply = await interaction.reply({ content: `Running Playbook for: ${label}!` });
       } else {
-        await interaction.reply({ content: `Failed to run Playbook for: ${label}.`, flags: 64 });
+        reply = await interaction.reply({ content: `Failed to run Playbook for: ${label}.` });
       }
+      setTimeout(async () => {
+        try {
+          await reply.delete();
+          await interaction.message.delete();
+        } catch (e) {}
+      }, 5000);
     } catch (err) {
-      await interaction.reply({ content: `Error: ${err.message}`, flags: 64 });
+      const reply = await interaction.reply({ content: `Error: ${err.message}` });
+      setTimeout(async () => {
+        try {
+          await reply.delete();
+          await interaction.message.delete();
+        } catch (e) {}
+      }, 5000);
     }
     return;
   }
