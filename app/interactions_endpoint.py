@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request, Header, HTTPException # type: ignore
 from nacl.signing import VerifyKey # type: ignore
 from nacl.exceptions import BadSignatureError # type: ignore
 
-DISCORD_SEMAPHORE_POST_PUBLIC_KEY = os.getenv("DISCORD_SEMAPHORE_POST_PUBLIC_KEY")
+DISCORD_SEMAPHORE_INTERACTIONS_BOT_PUBLIC_KEY = os.getenv("DISCORD_SEMAPHORE_INTERACTIONS_BOT_PUBLIC_KEY")
 SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL")
 SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL")
 SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL = os.getenv("SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL")
@@ -21,7 +21,7 @@ async def interactions(
 
     # Validate Discord Signature
     try:
-        verify_key = VerifyKey(bytes.fromhex(DISCORD_SEMAPHORE_POST_PUBLIC_KEY))
+        verify_key = VerifyKey(bytes.fromhex(DISCORD_SEMAPHORE_INTERACTIONS_BOT_PUBLIC_KEY))
         verify_key.verify(
             x_signature_timestamp.encode() + body,
             bytes.fromhex(x_signature_ed25519)
