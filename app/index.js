@@ -8,6 +8,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ActionRowBuilder,
+  StringSelectMenuBuilder,
   Events,
   InteractionType
 } from 'discord.js';
@@ -127,56 +128,118 @@ client.once('ready', () => {
 
 
 client.on(Events.InteractionCreate, async interaction => {
+  // Main menu: show select menu for categories
   if (interaction.type === InteractionType.ApplicationCommand && interaction.commandName === 'playbooks') {
-    // Build a message with category headers and descriptions only
-    let content = '**Semaphore Playbooks**\n';
-    const rows = [];
-    buttonGroups.forEach(group => {
-      content += `\n__${group.category}__\n${group.description}\n`;
-      // Create rows of buttons for this group (max 5 per row)
-      const groupButtons = group.buttons.map(btn =>
-        new ButtonBuilder()
-          .setCustomId(btn.customId)
-          .setLabel(`${btn.emoji} ${btn.label}`)
-          .setStyle(ButtonStyle.Primary)
+    const selectMenu = new StringSelectMenuBuilder()
+      .setCustomId('select_category')
+      .setPlaceholder('Select a playbook category...')
+      .addOptions(
+        buttonGroups.map(group => ({
+          label: group.category,
+          description: group.description,
+          value: group.category,
+          emoji: group.category === 'Update Reports' ? '📄' : '⬇️',
+        }))
       );
-      for (let i = 0; i < groupButtons.length; i += 5) {
-        rows.push(new ActionRowBuilder().addComponents(groupButtons.slice(i, i + 5)));
-      }
-    });
-    // Add a cancel/close button (always last row)
-    const cancelButton = new ButtonBuilder()
+    const row = new ActionRowBuilder().addComponents(selectMenu);
+    const closeButton = new ButtonBuilder()
       .setCustomId('close_menu')
       .setLabel('❌ Close')
       .setStyle(ButtonStyle.Secondary);
-    rows.push(new ActionRowBuilder().addComponents(cancelButton));
-    await interaction.reply({ content, components: rows, ephemeral: true });
+    const closeRow = new ActionRowBuilder().addComponents(closeButton);
+    await interaction.reply({
+      content: '**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
+      components: [row, closeRow],
+      ephemeral: true,
+    });
+    return;
   }
 
-  if (interaction.isButton()) {
-    if (interaction.customId === 'close_menu') {
-      // Delete the reply (ephemeral, so just update to say closed)
-      await interaction.update({ content: 'Menu closed.', components: [] });
+  // Handle select menu for category
+  if (interaction.isStringSelectMenu() && interaction.customId === 'select_category') {
+    const selectedCategory = interaction.values[0];
+    const group = buttonGroups.find(g => g.category === selectedCategory);
+    if (!group) {
+      await interaction.update({ content: 'Category not found.', components: [] });
       return;
     }
-    if (interaction.customId.startsWith('webhook_')) {
-      const label = interaction.customId.replace('webhook_', '');
-      const webhookUrl = webhookUrls[label];
-      if (!webhookUrl) {
-        await interaction.reply({ content: 'Webhook URL not found.', ephemeral: true });
-        return;
-      }
-      try {
-        const resp = await fetch(webhookUrl, { method: 'POST' });
-        if (resp.ok) {
-          await interaction.reply({ content: `Running Playbook for: ${label}!`, ephemeral: true });
-        } else {
-          await interaction.reply({ content: `Failed to run Playbook for: ${label}.`, ephemeral: true });
-        }
-      } catch (err) {
-        await interaction.reply({ content: `Error: ${err.message}`, ephemeral: true });
-      }
+    // Build submenu with buttons for this category
+    let content = `**${group.category}**\n${group.description}`;
+    const groupButtons = group.buttons.map(btn =>
+      new ButtonBuilder()
+        .setCustomId(btn.customId)
+        .setLabel(`${btn.emoji} ${btn.label}`)
+        .setStyle(ButtonStyle.Primary)
+    );
+    const rows = [];
+    for (let i = 0; i < groupButtons.length; i += 5) {
+      rows.push(new ActionRowBuilder().addComponents(groupButtons.slice(i, i + 5)));
     }
+    // Add back and close buttons
+    const backButton = new ButtonBuilder()
+      .setCustomId('back_to_main')
+      .setLabel('⬅️ Back')
+      .setStyle(ButtonStyle.Secondary);
+    const closeButton = new ButtonBuilder()
+      .setCustomId('close_menu')
+      .setLabel('❌ Close')
+      .setStyle(ButtonStyle.Secondary);
+    rows.push(new ActionRowBuilder().addComponents(backButton, closeButton));
+    await interaction.update({ content, components: rows });
+    return;
+  }
+
+  // Handle back button
+  if (interaction.isButton() && interaction.customId === 'back_to_main') {
+    const selectMenu = new StringSelectMenuBuilder()
+      .setCustomId('select_category')
+      .setPlaceholder('Select a playbook category...')
+      .addOptions(
+        buttonGroups.map(group => ({
+          label: group.category,
+          description: group.description,
+          value: group.category,
+          emoji: group.category === 'Update Reports' ? '📄' : '⬇️',
+        }))
+      );
+    const row = new ActionRowBuilder().addComponents(selectMenu);
+    const closeButton = new ButtonBuilder()
+      .setCustomId('close_menu')
+      .setLabel('❌ Close')
+      .setStyle(ButtonStyle.Secondary);
+    const closeRow = new ActionRowBuilder().addComponents(closeButton);
+    await interaction.update({
+      content: '**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
+      components: [row, closeRow],
+    });
+    return;
+  }
+
+  // Handle close button
+  if (interaction.isButton() && interaction.customId === 'close_menu') {
+    await interaction.update({ content: 'Menu closed.', components: [] });
+    return;
+  }
+
+  // Handle playbook button
+  if (interaction.isButton() && interaction.customId.startsWith('webhook_')) {
+    const label = interaction.customId.replace('webhook_', '');
+    const webhookUrl = webhookUrls[label];
+    if (!webhookUrl) {
+      await interaction.reply({ content: 'Webhook URL not found.', ephemeral: true });
+      return;
+    }
+    try {
+      const resp = await fetch(webhookUrl, { method: 'POST' });
+      if (resp.ok) {
+        await interaction.reply({ content: `Running Playbook for: ${label}!`, ephemeral: true });
+      } else {
+        await interaction.reply({ content: `Failed to run Playbook for: ${label}.`, ephemeral: true });
+      }
+    } catch (err) {
+      await interaction.reply({ content: `Error: ${err.message}`, ephemeral: true });
+    }
+    return;
   }
 });
 
