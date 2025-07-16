@@ -1,3 +1,4 @@
+print("[DEBUG] Starting discord_slash_commands.py...")
 import discord # type: ignore
 from discord import app_commands, Interaction # type: ignore
 from discord.ext import commands # type: ignore
@@ -16,8 +17,8 @@ webhook_urls = {
 }
 
 # Set your test guild ID here for faster command sync during development
-GUILD_ID = int(os.getenv('DISCORD_SERVER_ID', '0'))  # Set this env var to your test guild ID
-print(f"[DEBUG] GUILD_ID is set to: {GUILD_ID}")
+DISCORD_SERVER_ID = os.getenv('DISCORD_SERVER_ID') # Set this env var to your test guild ID
+print(f"[DEBUG] DISCORD_SERVER_ID is set to: {DISCORD_SERVER_ID}")
 
 class WebhookButton(discord.ui.Button):
     def __init__(self, label: str, webhook_url: str):
@@ -53,8 +54,8 @@ class MyBot(commands.Bot):
 
     async def setup_hook(self):
         # Force guild-specific sync for faster updates and to avoid signature mismatch
-        if GUILD_ID:
-            guild = discord.Object(id=GUILD_ID)
+        if DISCORD_SERVER_ID:
+            guild = discord.Object(id=DISCORD_SERVER_ID)
             await self.tree.sync(guild=guild)
         else:
             await self.tree.sync()
