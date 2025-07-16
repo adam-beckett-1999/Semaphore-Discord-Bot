@@ -4,7 +4,10 @@ A Discord bot that bridges Discord interactions with SemaphoreUI automation, all
 
 ## Overview
 
-This minimal FastAPI-based Discord bot handles Discord interactions and triggers Ansible playbooks in SemaphoreUI (https://semaphoreui.com/) via custom component interactions.
+
+This project now includes:
+- A FastAPI-based endpoint (`app/interactions_endpoint.py`) for handling Discord interactions and triggering Ansible playbooks in SemaphoreUI (https://semaphoreui.com/) via custom component interactions.
+- A persistent Discord bot (`app/discord_slash_commands.py`) using discord.py, supporting slash commands and interactive buttons to trigger SemaphoreUI webhooks directly from Discord.
 
 ![Bot Demo](demo.gif)
 
@@ -12,16 +15,17 @@ This minimal FastAPI-based Discord bot handles Discord interactions and triggers
 
 ## Features
 
-- 🔐 Secure Discord interaction verification using Ed25519 signatures
-- 🚀 Trigger SemaphoreUI playbooks via Discord button interactions
-- 🐳 Docker deployment ready
-- ⚡ Async FastAPI backend for high performance
+- Secure Discord interaction verification using Ed25519 signatures (FastAPI endpoint)
+- Trigger SemaphoreUI playbooks via Discord button interactions (both FastAPI and discord.py bot)
+- Slash command `/playbooks` in Discord to bring up interactive playbook buttons (discord.py bot)
+- Docker deployment ready (runs both FastAPI and discord.py bot in one container)
+- Async FastAPI backend for high performance
 
 ## Requirements
 
 - Python 3.11+
 - Docker (optional, for containerized deployment)
-- A Discord application with a public key
+- A Discord application with a public key and bot token
 - SemaphoreUI environment with configured 'Integrations' for your playbooks
 
 ## Setup
@@ -42,40 +46,54 @@ This minimal FastAPI-based Discord bot handles Discord interactions and triggers
    Create a `.env` file in the project root:
    ```
    DISCORD_PUBLIC_KEY=your_discord_app_public_key_here
+   DISCORD_BOT_TOKEN=your_discord_bot_token_here
    SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
+   SEMAPHORE_VMS_LXCS_UPDATE_REPORT_TRIGGER_URL=your_semaphore_report_trigger_url_here
+   SEMAPHORE_PVE_CLUSTERS_UPDATE_REPORT_TRIGGER_URL=your_semaphore_report_trigger_url_here
+   SEMAPHORE_PHYSICAL_HOSTS_UPDATE_REPORT_TRIGGER_URL=your_semaphore_report_trigger_url_here
    ```
 
 ## Running Locally
 
+To run the FastAPI endpoint:
 ```sh
-uvicorn app.main:app --reload
+uvicorn app.interactions_endpoint:app --reload
+```
+
+To run the discord.py bot:
+```sh
+python app/discord_slash_commands.py
 ```
 
 ## Docker
 
-Build and run the container:
+Build and run the container (both FastAPI and discord.py bot will run together using Supervisor):
 
 ```sh
 docker build -t semaphore-discord-bot .
-docker run -e DISCORD_PUBLIC_KEY=your_discord_app_public_key_here -p 8000:8000 semaphore-discord-bot
+docker run --env-file .env -p 8000:8000 semaphore-discord-bot
 ```
 
 ## Endpoints
 
 - `POST /interactions`  
-  Handles Discord interaction payloads. Verifies signatures and responds to pings and custom component interactions.
+  Handles Discord interaction payloads (FastAPI). Verifies signatures and responds to pings and custom component interactions.
 
-- Needs to be hosted publicly over HTTPS, the easiest method is to put behind a reverse-proxy.
+- Discord slash command `/playbooks`  
+  Brings up a menu of buttons in Discord to trigger SemaphoreUI webhooks (discord.py bot).
+
+- Needs to be hosted publicly over HTTPS, the easiest method is to put behind a reverse-proxy (for FastAPI endpoint).
 
 ## How It Works
 
-1. **Ansible playbooks** send Discord messages with interactive buttons to channels
-2. **Users click buttons** in Discord to trigger playbooks
-3. **Discord bot** receives the interaction, verifies the signature, and calls SemaphoreUI webhooks
-4. **SemaphoreUI** executes the corresponding Ansible playbooks
-5. **Users receive feedback** in Discord about the operation status
+1. **Ansible playbooks** can send Discord messages with interactive buttons to channels (handled by FastAPI endpoint)
+2. **Users can also use the `/webhooks` slash command** in Discord to bring up interactive buttons (handled by discord.py bot)
+3. **Users click buttons** in Discord to trigger playbooks
+4. **Bot receives the interaction, verifies the signature (FastAPI) or handles via gateway (discord.py), and calls SemaphoreUI webhooks**
+5. **SemaphoreUI** executes the corresponding Ansible playbooks
+6. **Users receive feedback** in Discord about the operation status
 
 ## Ansible Playbooks
 
@@ -109,7 +127,7 @@ Example role: https://github.com/adam-beckett-1999/Ansible-Playbooks/blob/dev/ro
   run_once: true
 ```
 
-The custom_id would match with the button interaction function, so that when the button is pressed, it calls the webhook URL configured via environment variable that matches with it, triggering the playbook in Semaphore.
+The custom_id would match with the button interaction function, so that when the button is pressed, it calls the webhook URL configured via environment variable that matches with it, triggering the playbook in Semaphore (FastAPI endpoint). For the discord.py bot, use the `/webhooks` command to bring up interactive playbook buttons.
 
 ## Contributing
 

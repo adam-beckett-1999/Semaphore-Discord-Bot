@@ -1,3 +1,4 @@
+
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -9,8 +10,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy app code
 COPY app/ ./app
 
-# Expose port
+# Expose port for FastAPI (optional for discord.py bot)
 EXPOSE 8000
 
-# Start the FastAPI app using uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Install supervisor to run multiple processes
+RUN pip install supervisor
+
+# Add supervisor config
+COPY supervisord.conf ./
+
+# Default: Start both FastAPI and discord.py bot using supervisor
+CMD ["supervisord", "-c", "/app/supervisord.conf"]
