@@ -5,7 +5,7 @@ import aiohttp # type: ignore
 import os
 
 # Replace with your bot token and webhook URLs
-token = os.getenv('DISCORD_BOT_TOKEN')
+token = os.getenv('DISCORD_SEMAPHORE_CONTROL_BOT_TOKEN')
 webhook_urls = {
     'Generate Update-Report for VMs & LXCs': os.getenv('SEMAPHORE_VMS_LXCS_UPDATE_REPORT_TRIGGER_URL'),
     'Generate Update-Report for PVE Clusters': os.getenv('SEMAPHORE_PVE_CLUSTERS_UPDATE_REPORT_TRIGGER_URL'),
