@@ -10,13 +10,6 @@ This minimal FastAPI-based Discord bot handles Discord interactions and triggers
 
 *Interactive Discord bot triggering infrastructure automation through SemaphoreUI*
 
-## Features
-
-- 🔐 Secure Discord interaction verification using Ed25519 signatures
-- 🚀 Trigger SemaphoreUI playbooks via Discord button interactions
-- 🐳 Docker deployment ready
-- ⚡ Async FastAPI backend for high performance
-
 ## Requirements
 
 - Python 3.11+
@@ -41,7 +34,7 @@ This minimal FastAPI-based Discord bot handles Discord interactions and triggers
 
    Create a `.env` file in the project root:
    ```
-   DISCORD_PUBLIC_KEY=your_discord_app_public_key_here
+   DISCORD_SEMAPHORE_INTERACTIONS_BOT_PUBLIC_KEY=your_discord_app_public_key_here
    SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
@@ -59,7 +52,7 @@ Build and run the container:
 
 ```sh
 docker build -t semaphore-discord-bot .
-docker run -e DISCORD_PUBLIC_KEY=your_discord_app_public_key_here -p 8000:8000 semaphore-discord-bot
+docker run -e DISCORD_SEMAPHORE_INTERACTIONS_BOT_PUBLIC_KEY=your_discord_app_public_key_here -p 8000:8000 semaphore-discord-bot
 ```
 
 ## Endpoints

@@ -2,7 +2,7 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ main ]
+    branches: [ interactions-endpoint ]
 
 jobs:
   docker-build-push:
@@ -26,4 +26,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: sentinelkasai/semaphore-discord-bot:latest
+          tags: sentinelkasai/semaphore-discord-interactions-endpoint-bot:latest
