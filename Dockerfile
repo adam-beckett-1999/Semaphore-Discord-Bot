@@ -10,11 +10,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy app code
 COPY app/ ./app
 
-# Install supervisor to run multiple processes
-RUN pip install supervisor
-
-# Add supervisor config
-COPY supervisord.conf ./
-
-# Default: Start both FastAPI and discord.py bot using supervisor
-CMD ["supervisord", "-c", "/app/supervisord.conf"]
+# Start the discord.py bot directly
+CMD ["python", "app/discord_slash_commands.py"]
