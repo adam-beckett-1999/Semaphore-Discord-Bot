@@ -150,7 +150,7 @@ client.on(Events.InteractionCreate, async interaction => {
     await interaction.reply({
       content: '\n**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
       components: [row, closeRow],
-      ephemeral: true,
+      flags: 64, // Make ephemeral
     });
     return;
   }
@@ -226,18 +226,18 @@ client.on(Events.InteractionCreate, async interaction => {
     const label = interaction.customId.replace('webhook_', '');
     const webhookUrl = webhookUrls[label];
     if (!webhookUrl) {
-      await interaction.reply({ content: 'Webhook URL not found.', ephemeral: true });
+      await interaction.reply({ content: 'Webhook URL not found.', flags: 64 });
       return;
     }
     try {
       const resp = await fetch(webhookUrl, { method: 'POST' });
       if (resp.ok) {
-        await interaction.reply({ content: `Running Playbook for: ${label}!`, ephemeral: true });
+        await interaction.reply({ content: `Running Playbook for: ${label}!`, flags: 64 });
       } else {
-        await interaction.reply({ content: `Failed to run Playbook for: ${label}.`, ephemeral: true });
+        await interaction.reply({ content: `Failed to run Playbook for: ${label}.`, flags: 64 });
       }
     } catch (err) {
-      await interaction.reply({ content: `Error: ${err.message}`, ephemeral: true });
+      await interaction.reply({ content: `Error: ${err.message}`, flags: 64 });
     }
     return;
   }

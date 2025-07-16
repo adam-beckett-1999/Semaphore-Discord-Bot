@@ -1,4 +1,3 @@
-
 FROM node:lts-slim
 
 WORKDIR /app
@@ -14,7 +13,7 @@ COPY app/ ./app
 
 # Healthcheck: check if the bot process is running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD pgrep -f "node app/index.js" || exit 1
+  CMD pgrep -f "index.js" || exit 1
 
 # Start the discord.js bot directly
 CMD ["node", "app/index.js"]
