@@ -41,7 +41,7 @@ class MyBot(commands.Bot):
         self.tree.add_command(self.playbooks)
 
     @app_commands.command(name="playbooks", description="Show Semaphore playbook buttons.")
-    async def webhooks(self, interaction: Interaction):
+    async def playbooks(self, interaction: Interaction):  # <-- rename here
         await interaction.response.send_message("Select a playbook to trigger:", view=WebhookView(), ephemeral=True)
 
     async def setup_hook(self):
