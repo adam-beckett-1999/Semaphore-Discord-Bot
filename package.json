@@ -11,7 +11,8 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "transform": {}
+    "transform": {},
+    "extensionsToTreatAsEsm": [".js"]
   },
   "dependencies": {
     "discord.js": "^14.14.1",
