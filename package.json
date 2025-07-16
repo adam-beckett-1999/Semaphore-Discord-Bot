@@ -17,5 +17,8 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
     "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.31.0"
   }
 }
