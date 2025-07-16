@@ -147,12 +147,12 @@ client.on(Events.InteractionCreate, async interaction => {
       .setLabel('❌ Close')
       .setStyle(ButtonStyle.Secondary);
     const closeRow = new ActionRowBuilder().addComponents(closeButton);
-    const reply = await interaction.reply({
+    await interaction.reply({
       content: '\n**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
-      components: [row, closeRow],
-      fetchReply: true
+      components: [row, closeRow]
     });
-    // Store the message for later deletion if needed
+    // Fetch the reply for later deletion if needed
+    const reply = await interaction.fetchReply();
     interaction._mainMsg = reply;
     return;
   }
@@ -235,7 +235,8 @@ client.on(Events.InteractionCreate, async interaction => {
     const label = interaction.customId.replace('webhook_', '');
     const webhookUrl = webhookUrls[label];
     if (!webhookUrl) {
-      const reply = await interaction.reply({ content: 'Webhook URL not found.' });
+      await interaction.reply({ content: 'Webhook URL not found.' });
+      const reply = await interaction.fetchReply();
       setTimeout(async () => {
         try {
           await reply.delete();
@@ -245,12 +246,12 @@ client.on(Events.InteractionCreate, async interaction => {
     }
     try {
       const resp = await fetch(webhookUrl, { method: 'POST' });
-      let reply;
       if (resp.ok) {
-        reply = await interaction.reply({ content: `Running Playbook for: ${label}!` });
+        await interaction.reply({ content: `Running Playbook for: ${label}!` });
       } else {
-        reply = await interaction.reply({ content: `Failed to run Playbook for: ${label}.` });
+        await interaction.reply({ content: `Failed to run Playbook for: ${label}.` });
       }
+      const reply = await interaction.fetchReply();
       setTimeout(async () => {
         try {
           await reply.delete();
@@ -258,7 +259,8 @@ client.on(Events.InteractionCreate, async interaction => {
         } catch (e) {}
       }, 5000);
     } catch (err) {
-      const reply = await interaction.reply({ content: `Error: ${err.message}` });
+      await interaction.reply({ content: `Error: ${err.message}` });
+      const reply = await interaction.fetchReply();
       setTimeout(async () => {
         try {
           await reply.delete();
