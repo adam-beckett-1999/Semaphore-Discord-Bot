@@ -25,6 +25,9 @@ const requiredEnv = [
   'SEMAPHORE_VMS_LXCS_UPDATE_REPORT_TRIGGER_URL',
   'SEMAPHORE_PVE_CLUSTERS_UPDATE_REPORT_TRIGGER_URL',
   'SEMAPHORE_PHYSICAL_HOSTS_UPDATE_REPORT_TRIGGER_URL',
+  'SEMAPHORE_PVE_CORE_CLUSTER_REBOOT_URL',
+  'SEMAPHORE_PVE_MINI_CLUSTER_REBOOT_URL',
+  'SEMAPHORE_PVE_TEST_CLUSTER_REBOOT_URL',
 ];
 const missing = requiredEnv.filter((key) => !process.env[key]);
 if (missing.length > 0) {
@@ -87,6 +90,30 @@ const buttonGroups = [
       },
     ],
   },
+  {
+    category: 'PVE Cluster Reboots',
+    description: 'Perform a rolling reboot of your PVE clusters (HA-Aware).',
+    buttons: [
+      {
+        label: 'Reboot PVE-CORE-CLUSTER',
+        emoji: '🔄',
+        customId: 'webhook_Reboot PVE-CORE-CLUSTER',
+        url: process.env.SEMAPHORE_PVE_CORE_CLUSTER_REBOOT_URL,
+      },
+      {
+        label: 'Reboot PVE-MINI-CLUSTER',
+        emoji: '🔄',
+        customId: 'webhook_Reboot PVE-MINI-CLUSTER',
+        url: process.env.SEMAPHORE_PVE_MINI_CLUSTER_REBOOT_URL,
+      },
+      {
+        label: 'Reboot PVE-TEST-CLUSTER',
+        emoji: '🔄',
+        customId: 'webhook_Reboot PVE-TEST-CLUSTER',
+        url: process.env.SEMAPHORE_PVE_TEST_CLUSTER_REBOOT_URL,
+      },
+    ],
+  },
 ];
 
 // For button interaction lookup
@@ -102,8 +129,8 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 // Register slash command
 const commands = [
   {
-    name: 'playbooks',
-    description: 'Show Semaphore playbook buttons.',
+    name: 'automations',
+    description: 'Show Semaphore automation buttons.',
   },
 ];
 
@@ -129,10 +156,10 @@ client.once('ready', () => {
 
 client.on(Events.InteractionCreate, async interaction => {
   // Main menu: show select menu for categories
-  if (interaction.type === InteractionType.ApplicationCommand && interaction.commandName === 'playbooks') {
+  if (interaction.type === InteractionType.ApplicationCommand && interaction.commandName === 'automations') {
     const selectMenu = new StringSelectMenuBuilder()
       .setCustomId('select_category')
-      .setPlaceholder('Select a playbook category...')
+      .setPlaceholder('Select an automation category...')
       .addOptions(
         buttonGroups.map(group => ({
           label: group.category,
@@ -148,7 +175,7 @@ client.on(Events.InteractionCreate, async interaction => {
       .setStyle(ButtonStyle.Secondary);
     const closeRow = new ActionRowBuilder().addComponents(closeButton);
     await interaction.reply({
-      content: '\n**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
+      content: '\n**Semaphore Automations**\n\nPlease select a category to view available automations.',
       components: [row, closeRow]
     });
     // Fetch the reply for later deletion if needed
@@ -166,7 +193,7 @@ client.on(Events.InteractionCreate, async interaction => {
       return;
     }
     // Build submenu with buttons for this category
-    let content = `\n**${group.category}**\n\n${group.description}\n\n*Choose an action below:*`;
+    let content = `\n**${group.category}**\n\n${group.description}\n\n*Choose an automation below:*`;
     const groupButtons = group.buttons.map(btn =>
       new ButtonBuilder()
         .setCustomId(btn.customId)
@@ -195,7 +222,7 @@ client.on(Events.InteractionCreate, async interaction => {
   if (interaction.isButton() && interaction.customId === 'back_to_main') {
     const selectMenu = new StringSelectMenuBuilder()
       .setCustomId('select_category')
-      .setPlaceholder('Select a playbook category...')
+      .setPlaceholder('Select an automation category...')
       .addOptions(
         buttonGroups.map(group => ({
           label: group.category,
@@ -211,7 +238,7 @@ client.on(Events.InteractionCreate, async interaction => {
       .setStyle(ButtonStyle.Secondary);
     const closeRow = new ActionRowBuilder().addComponents(closeButton);
     await interaction.update({
-      content: '\n**Semaphore Playbooks**\n\nPlease select a category to view available playbooks.',
+      content: '\n**Semaphore Automations**\n\nPlease select a category to view available automations.',
       components: [row, closeRow],
     });
     return;
@@ -247,9 +274,9 @@ client.on(Events.InteractionCreate, async interaction => {
     try {
       const resp = await fetch(webhookUrl, { method: 'POST' });
       if (resp.ok) {
-        await interaction.reply({ content: `Running Playbook for: ${label}!` });
+        await interaction.reply({ content: `Running Automation for: ${label}!` });
       } else {
-        await interaction.reply({ content: `Failed to run Playbook for: ${label}.` });
+        await interaction.reply({ content: `Failed to run Automation for: ${label}.` });
       }
       const reply = await interaction.fetchReply();
       setTimeout(async () => {
