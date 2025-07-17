@@ -41,3 +41,23 @@ jobs:
           context: .
           push: true
           tags: sentinelkasai/semaphore-discord-commands-bot:latest
+
+      - name: Discord Notification
+        if: success()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d "{\"content\":\":whale: Docker image \`sentinelkasai/semaphore-discord-commands-bot:latest\` has been pushed to Docker Hub!\"}" \
+            $DISCORD_WEBHOOK
+      
+      - name: Discord Notification (Failure)
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d "{\"content\":\":x: Docker build or push failed for \`sentinelkasai/semaphore-discord-commands-bot:latest\`!\"}" \
+            $DISCORD_WEBHOOK
