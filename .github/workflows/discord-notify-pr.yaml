@@ -1,0 +1,33 @@
+name: Notify Discord on PR from Dev to Release branch
+
+on:
+  pull_request:
+    types: [opened]
+    branches: [interactions-endpoint-dev]
+    paths-ignore: []
+
+jobs:
+  notify-discord:
+    if: github.base_ref == 'release' && github.head_ref == 'dev'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Webhook
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{
+              "embeds": [{
+                "title": "🔔 Pull Request Opened",
+                "description": "A pull request has been opened to merge **dev** into **release**.\n\n[View PR #${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }})",
+                "color": 3447003,
+                "fields": [
+                  { "name": "Title", "value": "${{ github.event.pull_request.title }}" },
+                  { "name": "Author", "value": "${{ github.event.pull_request.user.login }}" }
+                ],
+                "timestamp": "'"$(date --utc +%Y-%m-%dT%H:%M:%SZ)"'",
+                "footer": { "text": "GitHub Actions • PR Notification" }
+              }]
+            }' \
+            $DISCORD_WEBHOOK
