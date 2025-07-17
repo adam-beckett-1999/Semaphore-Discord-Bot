@@ -8,7 +8,7 @@ on:
 
 jobs:
   notify-discord:
-    if: github.base_ref == 'release' && github.head_ref == 'dev'
+    if: github.base_ref == 'commands-bot' && github.head_ref == 'commands-bot-dev'
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Webhook
