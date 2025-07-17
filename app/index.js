@@ -165,7 +165,14 @@ client.on(Events.InteractionCreate, async interaction => {
           label: group.category,
           description: group.description,
           value: group.category,
-          emoji: group.category === 'Update Reports' ? '📄' : '⬇️',
+          emoji:
+            group.category === 'Update Reports'
+              ? { name: '📄' }
+              : group.category === 'Update Installs'
+              ? { name: '⬇️' }
+              : group.category === 'PVE Cluster Reboots'
+              ? { name: '🔄' }
+              : undefined,
         }))
       );
     const row = new ActionRowBuilder().addComponents(selectMenu);
@@ -228,7 +235,14 @@ client.on(Events.InteractionCreate, async interaction => {
           label: group.category,
           description: group.description,
           value: group.category,
-          emoji: group.category === 'Update Reports' ? '📄' : '⬇️',
+          emoji:
+            group.category === 'Update Reports'
+              ? { name: '📄' }
+              : group.category === 'Update Installs'
+              ? { name: '⬇️' }
+              : group.category === 'PVE Cluster Reboots'
+              ? { name: '🔄' }
+              : undefined,
         }))
       );
     const row = new ActionRowBuilder().addComponents(selectMenu);
