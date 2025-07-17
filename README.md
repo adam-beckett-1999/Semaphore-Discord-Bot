@@ -1,11 +1,11 @@
 
 # Semaphore-Discord-Bot
 
-A Discord bot that bridges Discord interactions with SemaphoreUI automation, allowing users to trigger Ansible playbooks directly from Discord using interactive buttons.
+A Discord bot that bridges Discord interactions with SemaphoreUI automation, allowing users to trigger Ansible playbooks and other automated scripting directly from Discord using interactive buttons.
 
 ## Overview
 
-This project is implemented in **Node.js** using [discord.js](https://discord.js.org/). It provides a persistent Discord bot that supports slash commands and interactive buttons to trigger SemaphoreUI webhooks directly from Discord.
+This project is implemented in **Node.js** using [discord.js](https://discord.js.org/). It provides a persistent Discord bot that supports slash commands and interactive buttons to trigger SemaphoreUI webhooks directly from Discord, and works in tandem with the Interactions Endpoint Bot to allow Ansible/Semaphore Automations to be run.
 
 ![Bot Demo](demo.gif)
 
@@ -70,15 +70,15 @@ docker run --env-file .env semaphore-discord-command-bot
 
 ## Endpoints
 
-- Discord slash command `/playbooks`  
+- Discord slash command `/automations`  
   Brings up a menu of buttons in Discord to trigger SemaphoreUI webhooks.
 
 ## How It Works
 
-1. **Users use the `/playbooks` slash command** in Discord to bring up interactive buttons
-2. **Users click buttons** in Discord to trigger playbooks
+1. **Users use the `/automations` slash command** in Discord to bring up interactive buttons
+2. **Users click buttons** in Discord to trigger automations
 3. **Bot receives the interaction, handles via gateway (discord.js), and calls SemaphoreUI webhooks**
-4. **SemaphoreUI** executes the corresponding Ansible playbooks
+4. **SemaphoreUI** executes the corresponding Semaphore automations
 5. **Users receive feedback** in Discord about the operation status
 
 ## Ansible Playbooks
