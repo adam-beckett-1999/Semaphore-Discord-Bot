@@ -8,10 +8,22 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ActionRowBuilder,
+  StringSelectMenuBuilder,
   Events,
   InteractionType
 } from 'discord.js';
 import fetch from 'node-fetch';
+
+// Utility function to schedule message deletion
+function scheduleMessageDeletion(message, delay = 5000) {
+  setTimeout(async () => {
+    try {
+      await message.delete();
+    } catch (e) {
+      // Ignore errors (e.g., already deleted or missing permissions)
+    }
+  }, delay);
+}
 
 // Validate required environment variables
 const requiredEnv = [
@@ -24,6 +36,9 @@ const requiredEnv = [
   'SEMAPHORE_VMS_LXCS_UPDATE_REPORT_TRIGGER_URL',
   'SEMAPHORE_PVE_CLUSTERS_UPDATE_REPORT_TRIGGER_URL',
   'SEMAPHORE_PHYSICAL_HOSTS_UPDATE_REPORT_TRIGGER_URL',
+  'SEMAPHORE_PVE_CORE_CLUSTER_REBOOT_URL',
+  'SEMAPHORE_PVE_MINI_CLUSTER_REBOOT_URL',
+  'SEMAPHORE_PVE_TEST_CLUSTER_REBOOT_URL',
 ];
 const missing = requiredEnv.filter((key) => !process.env[key]);
 if (missing.length > 0) {
@@ -35,22 +50,98 @@ const token = process.env.DISCORD_SEMAPHORE_CONTROL_BOT_TOKEN;
 const clientId = process.env.DISCORD_CLIENT_ID;
 const guildId = process.env.DISCORD_SERVER_ID;
 
-const webhookUrls = {
-  'Generate Update-Report for VMs & LXCs': process.env.SEMAPHORE_VMS_LXCS_UPDATE_REPORT_TRIGGER_URL,
-  'Generate Update-Report for PVE Clusters': process.env.SEMAPHORE_PVE_CLUSTERS_UPDATE_REPORT_TRIGGER_URL,
-  'Generate Update-Report for Physical Hosts': process.env.SEMAPHORE_PHYSICAL_HOSTS_UPDATE_REPORT_TRIGGER_URL,
-  'Update VMs & LXCs': process.env.SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL,
-  'Update PVE Clusters': process.env.SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL,
-  'Update Physical Hosts': process.env.SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL,
-};
+
+// Grouped button definitions with emojis
+const buttonGroups = [
+  {
+    category: 'Update Reports',
+    description: 'Generate update reports for your infrastructure.',
+    buttons: [
+      {
+        label: 'VMs & LXCs',
+        emoji: '📄',
+        customId: 'webhook_Generate Update-Report for VMs & LXCs',
+        url: process.env.SEMAPHORE_VMS_LXCS_UPDATE_REPORT_TRIGGER_URL,
+      },
+      {
+        label: 'PVE Clusters',
+        emoji: '📄',
+        customId: 'webhook_Generate Update-Report for PVE Clusters',
+        url: process.env.SEMAPHORE_PVE_CLUSTERS_UPDATE_REPORT_TRIGGER_URL,
+      },
+      {
+        label: 'Physical Hosts',
+        emoji: '📄',
+        customId: 'webhook_Generate Update-Report for Physical Hosts',
+        url: process.env.SEMAPHORE_PHYSICAL_HOSTS_UPDATE_REPORT_TRIGGER_URL,
+      },
+    ],
+  },
+  {
+    category: 'Update Installs',
+    description: 'Trigger update installations for your infrastructure.',
+    buttons: [
+      {
+        label: 'VMs & LXCs',
+        emoji: '⬇️',
+        customId: 'webhook_Update VMs & LXCs',
+        url: process.env.SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL,
+      },
+      {
+        label: 'PVE Clusters',
+        emoji: '⬇️',
+        customId: 'webhook_Update PVE Clusters',
+        url: process.env.SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL,
+      },
+      {
+        label: 'Physical Hosts',
+        emoji: '⬇️',
+        customId: 'webhook_Update Physical Hosts',
+        url: process.env.SEMAPHORE_PHYSICAL_HOSTS_UPDATE_TRIGGER_URL,
+      },
+    ],
+  },
+  {
+    category: 'PVE Cluster Reboots',
+    description: 'Perform a rolling reboot of your PVE clusters (HA-Aware).',
+    buttons: [
+      {
+        label: 'Reboot PVE-CORE-CLUSTER',
+        emoji: '🔄',
+        customId: 'webhook_Reboot PVE-CORE-CLUSTER',
+        url: process.env.SEMAPHORE_PVE_CORE_CLUSTER_REBOOT_URL,
+      },
+      {
+        label: 'Reboot PVE-MINI-CLUSTER',
+        emoji: '🔄',
+        customId: 'webhook_Reboot PVE-MINI-CLUSTER',
+        url: process.env.SEMAPHORE_PVE_MINI_CLUSTER_REBOOT_URL,
+      },
+      {
+        label: 'Reboot PVE-TEST-CLUSTER',
+        emoji: '🔄',
+        customId: 'webhook_Reboot PVE-TEST-CLUSTER',
+        url: process.env.SEMAPHORE_PVE_TEST_CLUSTER_REBOOT_URL,
+      },
+    ],
+  },
+];
+
+// For button interaction lookup
+const webhookUrls = {};
+buttonGroups.forEach(group => {
+  group.buttons.forEach(btn => {
+    webhookUrls[btn.customId.replace('webhook_', '')] = btn.url;
+  });
+});
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 // Register slash command
 const commands = [
   {
-    name: 'playbooks',
-    description: 'Show Semaphore playbook buttons.',
+    name: 'automations',
+    description: 'Show Semaphore automation buttons.',
   },
 ];
 
@@ -73,41 +164,154 @@ client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
+
+// WeakMap to track main messages for interactions
+const mainMsgMap = new WeakMap();
+
 client.on(Events.InteractionCreate, async interaction => {
-  if (interaction.type === InteractionType.ApplicationCommand && interaction.commandName === 'playbooks') {
-    // Create buttons (max 5 per row)
-    const buttons = Object.entries(webhookUrls).map(([label, url]) =>
-      new ButtonBuilder()
-        .setCustomId(`webhook_${label}`)
-        .setLabel(label)
-        .setStyle(ButtonStyle.Primary)
-    );
-    // Split buttons into rows of 5
-    const rows = [];
-    for (let i = 0; i < buttons.length; i += 5) {
-      rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
-    }
-    await interaction.reply({ content: 'Select a playbook to trigger:', components: rows, ephemeral: true });
+  // Main menu: show select menu for categories
+  if (interaction.type === InteractionType.ApplicationCommand && interaction.commandName === 'automations') {
+    const selectMenu = new StringSelectMenuBuilder()
+      .setCustomId('select_category')
+      .setPlaceholder('Select an automation category...')
+      .addOptions(
+        buttonGroups.map(group => ({
+          label: group.category,
+          description: group.description,
+          value: group.category,
+          emoji:
+            group.category === 'Update Reports'
+              ? { name: '📄' }
+              : group.category === 'Update Installs'
+              ? { name: '⬇️' }
+              : group.category === 'PVE Cluster Reboots'
+              ? { name: '🔄' }
+              : undefined,
+        }))
+      );
+    const row = new ActionRowBuilder().addComponents(selectMenu);
+    const closeButton = new ButtonBuilder()
+      .setCustomId('close_menu')
+      .setLabel('❌ Close')
+      .setStyle(ButtonStyle.Secondary);
+    const closeRow = new ActionRowBuilder().addComponents(closeButton);
+    await interaction.reply({
+      content: '\n**Semaphore Automations**\n\nPlease select a category to view available automations.',
+      components: [row, closeRow]
+    });
+    // Fetch the reply for later deletion if needed
+    const reply = await interaction.fetchReply();
+    mainMsgMap.set(interaction, reply);
+    return;
   }
 
+  // Handle select menu for category
+  if (interaction.isStringSelectMenu() && interaction.customId === 'select_category') {
+    const selectedCategory = interaction.values[0];
+    const group = buttonGroups.find(g => g.category === selectedCategory);
+    if (!group) {
+      await interaction.update({ content: 'Category not found.', components: [] });
+      return;
+    }
+    // Build submenu with buttons for this category
+    let content = `\n**${group.category}**\n\n${group.description}\n\n*Choose an automation below:*`;
+    const groupButtons = group.buttons.map(btn =>
+      new ButtonBuilder()
+        .setCustomId(btn.customId)
+        .setLabel(`${btn.emoji} ${btn.label}`)
+        .setStyle(ButtonStyle.Primary)
+    );
+    const rows = [];
+    for (let i = 0; i < groupButtons.length; i += 5) {
+      rows.push(new ActionRowBuilder().addComponents(groupButtons.slice(i, i + 5)));
+    }
+    // Add back and close buttons
+    const backButton = new ButtonBuilder()
+      .setCustomId('back_to_main')
+      .setLabel('⬅️ Back')
+      .setStyle(ButtonStyle.Secondary);
+    const closeButton = new ButtonBuilder()
+      .setCustomId('close_menu')
+      .setLabel('❌ Close')
+      .setStyle(ButtonStyle.Secondary);
+    rows.push(new ActionRowBuilder().addComponents(backButton, closeButton));
+    await interaction.update({ content, components: rows });
+    return;
+  }
+
+  // Handle back button
+  if (interaction.isButton() && interaction.customId === 'back_to_main') {
+    const selectMenu = new StringSelectMenuBuilder()
+      .setCustomId('select_category')
+      .setPlaceholder('Select an automation category...')
+      .addOptions(
+        buttonGroups.map(group => ({
+          label: group.category,
+          description: group.description,
+          value: group.category,
+          emoji:
+            group.category === 'Update Reports'
+              ? { name: '📄' }
+              : group.category === 'Update Installs'
+              ? { name: '⬇️' }
+              : group.category === 'PVE Cluster Reboots'
+              ? { name: '🔄' }
+              : undefined,
+        }))
+      );
+    const row = new ActionRowBuilder().addComponents(selectMenu);
+    const closeButton = new ButtonBuilder()
+      .setCustomId('close_menu')
+      .setLabel('❌ Close')
+      .setStyle(ButtonStyle.Secondary);
+    await interaction.update({
+      content: '\n**Semaphore Automations**\n\nPlease select a category to view available automations.',
+      components: [row, new ActionRowBuilder().addComponents(closeButton)]
+    });
+    return;
+  }
+
+  // Handle close button
+  if (interaction.isButton() && interaction.customId === 'close_menu') {
+    await interaction.update({ content: 'Menu closed.', components: [] });
+    scheduleMessageDeletion(interaction.message, 5000);
+    return;
+  }
+
+  // Handle playbook button
   if (interaction.isButton() && interaction.customId.startsWith('webhook_')) {
     const label = interaction.customId.replace('webhook_', '');
     const webhookUrl = webhookUrls[label];
     if (!webhookUrl) {
-      await interaction.reply({ content: 'Webhook URL not found.', ephemeral: true });
+      await interaction.reply({ content: 'Webhook URL not found.' });
+      const reply = await interaction.fetchReply();
+      scheduleMessageDeletion(reply, 5000);
       return;
     }
     try {
       const resp = await fetch(webhookUrl, { method: 'POST' });
       if (resp.ok) {
-        await interaction.reply({ content: `Running Playbook for: ${label}!`, ephemeral: true });
+        await interaction.reply({ content: `Running Automation for: ${label}!` });
       } else {
-        await interaction.reply({ content: `Failed to run Playbook for: ${label}.`, ephemeral: true });
+        await interaction.reply({ content: `Failed to run Automation for: ${label}.` });
       }
+      const reply = await interaction.fetchReply();
+      scheduleMessageDeletion(reply, 5000);
+      scheduleMessageDeletion(interaction.message, 5000);
     } catch (err) {
-      await interaction.reply({ content: `Error: ${err.message}`, ephemeral: true });
+      await interaction.reply({ content: `Error: ${err.message}` });
+      const reply = await interaction.fetchReply();
+      scheduleMessageDeletion(reply, 5000);
+      scheduleMessageDeletion(interaction.message, 5000);
     }
+    return;
   }
 });
+
+async function replyAndSchedule(interaction, content, delay = 5000) {
+  await interaction.reply({ content });
+  const reply = await interaction.fetchReply();
+  scheduleMessageDeletion(reply, delay);
+}
 
 client.login(token);

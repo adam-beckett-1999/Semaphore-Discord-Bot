@@ -1,4 +1,3 @@
-
 FROM node:lts-slim
 
 WORKDIR /app
@@ -12,9 +11,12 @@ RUN npm install --omit=dev
 # Copy app code
 COPY app/ ./app
 
+# Install procps for pgrep
+RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
+
 # Healthcheck: check if the bot process is running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD pgrep -f "node app/index.js" || exit 1
+  CMD pgrep -f "index.js" || exit 1
 
 # Start the discord.js bot directly
 CMD ["node", "app/index.js"]
