@@ -3,7 +3,7 @@ name: Notify Discord on PR from Dev to Release branch
 on:
   pull_request:
     types: [opened]
-    branches: [interactions-endpoint-dev]
+    branches: [interactions-endpoint]
     paths-ignore: []
 
 jobs:
