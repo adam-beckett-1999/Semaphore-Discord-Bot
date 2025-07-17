@@ -14,6 +14,17 @@ import {
 } from 'discord.js';
 import fetch from 'node-fetch';
 
+// Utility function to schedule message deletion
+function scheduleMessageDeletion(message, delay = 5000) {
+  setTimeout(async () => {
+    try {
+      await message.delete();
+    } catch (e) {
+      // Ignore errors (e.g., already deleted or missing permissions)
+    }
+  }, delay);
+}
+
 // Validate required environment variables
 const requiredEnv = [
   'DISCORD_SEMAPHORE_CONTROL_BOT_TOKEN',
@@ -154,6 +165,9 @@ client.once('ready', () => {
 });
 
 
+// WeakMap to track main messages for interactions
+const mainMsgMap = new WeakMap();
+
 client.on(Events.InteractionCreate, async interaction => {
   // Main menu: show select menu for categories
   if (interaction.type === InteractionType.ApplicationCommand && interaction.commandName === 'automations') {
@@ -187,7 +201,7 @@ client.on(Events.InteractionCreate, async interaction => {
     });
     // Fetch the reply for later deletion if needed
     const reply = await interaction.fetchReply();
-    interaction._mainMsg = reply;
+    mainMsgMap.set(interaction, reply);
     return;
   }
 
@@ -250,10 +264,9 @@ client.on(Events.InteractionCreate, async interaction => {
       .setCustomId('close_menu')
       .setLabel('❌ Close')
       .setStyle(ButtonStyle.Secondary);
-    const closeRow = new ActionRowBuilder().addComponents(closeButton);
     await interaction.update({
       content: '\n**Semaphore Automations**\n\nPlease select a category to view available automations.',
-      components: [row, closeRow],
+      components: [row, new ActionRowBuilder().addComponents(closeButton)]
     });
     return;
   }
@@ -261,13 +274,7 @@ client.on(Events.InteractionCreate, async interaction => {
   // Handle close button
   if (interaction.isButton() && interaction.customId === 'close_menu') {
     await interaction.update({ content: 'Menu closed.', components: [] });
-    setTimeout(async () => {
-      try {
-        await interaction.message.delete();
-      } catch (e) {
-        // Ignore if already deleted or missing permissions
-      }
-    }, 5000);
+    scheduleMessageDeletion(interaction.message, 5000);
     return;
   }
 
@@ -278,11 +285,7 @@ client.on(Events.InteractionCreate, async interaction => {
     if (!webhookUrl) {
       await interaction.reply({ content: 'Webhook URL not found.' });
       const reply = await interaction.fetchReply();
-      setTimeout(async () => {
-        try {
-          await reply.delete();
-        } catch (e) {}
-      }, 5000);
+      scheduleMessageDeletion(reply, 5000);
       return;
     }
     try {
@@ -293,24 +296,22 @@ client.on(Events.InteractionCreate, async interaction => {
         await interaction.reply({ content: `Failed to run Automation for: ${label}.` });
       }
       const reply = await interaction.fetchReply();
-      setTimeout(async () => {
-        try {
-          await reply.delete();
-          await interaction.message.delete();
-        } catch (e) {}
-      }, 5000);
+      scheduleMessageDeletion(reply, 5000);
+      scheduleMessageDeletion(interaction.message, 5000);
     } catch (err) {
       await interaction.reply({ content: `Error: ${err.message}` });
       const reply = await interaction.fetchReply();
-      setTimeout(async () => {
-        try {
-          await reply.delete();
-          await interaction.message.delete();
-        } catch (e) {}
-      }, 5000);
+      scheduleMessageDeletion(reply, 5000);
+      scheduleMessageDeletion(interaction.message, 5000);
     }
     return;
   }
 });
+
+async function replyAndSchedule(interaction, content, delay = 5000) {
+  await interaction.reply({ content });
+  const reply = await interaction.fetchReply();
+  scheduleMessageDeletion(reply, delay);
+}
 
 client.login(token);
