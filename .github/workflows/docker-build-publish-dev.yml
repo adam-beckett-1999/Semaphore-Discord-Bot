@@ -27,3 +27,39 @@ jobs:
           context: .
           push: true
           tags: sentinelkasai/semaphore-discord-interactions-endpoint-bot:test
+
+      - name: Discord Notification (Success)
+        if: success()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{
+              "embeds": [{
+                "title": "✅ Docker Image Pushed",
+                "description": "The image **sentinelkasai/semaphore-discord-interactions-endpoint-bot:test** has been successfully pushed to Docker Hub.",
+                "color": 3066993,
+                "timestamp": "'"$(date --utc +%Y-%m-%dT%H:%M:%SZ)"'",
+                "footer": { "text": "GitHub Actions • Build Success" }
+              }]
+            }' \
+            $DISCORD_WEBHOOK
+
+      - name: Discord Notification (Failure)
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{
+              "embeds": [{
+                "title": "❌ Docker Build/Push Failed",
+                "description": "Docker build or push failed for **sentinelkasai/semaphore-discord-interactions-endpoint-bot:test**.",
+                "color": 15158332,
+                "timestamp": "'"$(date --utc +%Y-%m-%dT%H:%M:%SZ)"'",
+                "footer": { "text": "GitHub Actions • Build Failure" }
+              }]
+            }' \
+            $DISCORD_WEBHOOK
