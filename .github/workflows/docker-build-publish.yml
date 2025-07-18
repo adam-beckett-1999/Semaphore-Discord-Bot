@@ -3,6 +3,10 @@ name: Build and Push Docker Image
 on:
   push:
     branches: [ interactions-endpoint ]
+    paths:
+      - app/main.py
+      - requirements.txt
+      - Dockerfile
 
 jobs:
   docker-build-push:
