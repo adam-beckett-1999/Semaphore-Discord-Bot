@@ -1,0 +1,45 @@
+name: Notify Discord on PR Close/Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [commands-bot]
+    paths-ignore: []
+
+jobs:
+  notify-discord:
+    if: github.base_ref == 'commands-bot' && github.head_ref == 'commands-bot-dev'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Webhook
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+            STATUS="merged"
+            COLOR=3066993
+            TITLE="✅ Pull Request Merged"
+            DESC="A pull request has been **merged** from **dev** into **release**."
+          else
+            STATUS="closed"
+            COLOR=15158332
+            TITLE="❌ Pull Request Closed"
+            DESC="A pull request has been **closed** without merging."
+          fi
+
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"$TITLE\",
+                \"description\": \"$DESC\n\n[View PR #${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }})\",
+                \"color\": $COLOR,
+                \"fields\": [
+                  { \"name\": \"Title\", \"value\": \"${{ github.event.pull_request.title }}\" },
+                  { \"name\": \"Author\", \"value\": \"${{ github.event.pull_request.user.login }}\" }
+                ],
+                \"timestamp\": \"$(date --utc +%Y-%m-%dT%H:%M:%SZ)\",
+                \"footer\": { \"text\": \"GitHub Actions • PR Notification\" }
+              }]
+            }" \
+            $DISCORD_WEBHOOK

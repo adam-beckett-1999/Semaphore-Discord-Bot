@@ -3,6 +3,12 @@ name: Build and Push Docker Image
 on:
   push:
     branches: [ commands-bot-dev ]
+    paths:
+      - app/index.js
+      - app/index.test.js
+      - app/testHelpers.js
+      - Dockerfile
+      - package.json
 
 jobs:
   docker-build-push:
