@@ -8,7 +8,6 @@ A Discord bot that bridges Discord interactions with SemaphoreUI automation, all
 This project is implemented in **Node.js** using [discord.js](https://discord.js.org/). It provides a persistent Discord bot that supports slash commands and interactive buttons to trigger SemaphoreUI webhooks directly from Discord, and works in tandem with the Interactions Endpoint Bot to allow Ansible/Semaphore Automations to be run.
 
 ![Bot Demo](demo.gif)
-
 *Interactive Discord bot triggering infrastructure automation through SemaphoreUI*
 
 ## Features
@@ -27,12 +26,14 @@ This project is implemented in **Node.js** using [discord.js](https://discord.js
 ## Setup
 
 1. **Clone the repository:**
+
    ```sh
    git clone https://github.com/adam-beckett-1999/semaphore-discord-bot.git
    cd semaphore-discord-bot
    ```
 
 2. **Install dependencies:**
+
    ```sh
    npm install
    ```
@@ -40,7 +41,8 @@ This project is implemented in **Node.js** using [discord.js](https://discord.js
 3. **Configure environment variables:**
 
    Create a `.env` file in the project root:
-   ```
+
+   ```env
    DISCORD_SEMAPHORE_CONTROL_BOT_TOKEN=your_discord_bot_token_here
    DISCORD_CLIENT_ID=your_discord_client_id_here
    DISCORD_SERVER_ID=your_discord_server_id_here
@@ -55,6 +57,7 @@ This project is implemented in **Node.js** using [discord.js](https://discord.js
 ## Running Locally
 
 To run the bot:
+
 ```sh
 npm start
 ```
@@ -83,7 +86,7 @@ docker run --env-file .env semaphore-discord-command-bot
 
 ## Ansible Playbooks
 
-This ties in with my playbooks and roles which can be found here: https://github.com/adam-beckett-1999/Ansible-Playbooks
+This ties in with my playbooks and roles which can be found here: <https://github.com/adam-beckett-1999/Ansible-Playbooks>
 
 ## Contributing
 
