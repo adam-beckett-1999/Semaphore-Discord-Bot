@@ -21,7 +21,7 @@ async def interactions(
 
     # Validate Discord Signature
     try:
-        verify_key = VerifyKey(bytes.fromhex(DISCORD_SEMAPHORE_INTERACTIONS_BOT_PUBLIC_KEY))
+        verify_key = VerifyKey(bytes.fromhex(DISCORD_SEMAPHORE_INTERACTIONS_BOT_PUBLIC_KEY)) # type: ignore
         verify_key.verify(
             x_signature_timestamp.encode() + body,
             bytes.fromhex(x_signature_ed25519)
