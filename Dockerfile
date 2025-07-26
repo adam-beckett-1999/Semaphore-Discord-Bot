@@ -1,6 +1,12 @@
-FROM python:3.11-slim
+FROM python:3.13-alpine3.22
 
 WORKDIR /app
+
+# Update system packages and install security updates before installing dependencies
+RUN apk update && apk upgrade
+
+# Install system dependencies
+RUN apk add --no-cache build-base libsodium-dev libffi-dev
 
 # Install dependencies
 COPY requirements.txt .

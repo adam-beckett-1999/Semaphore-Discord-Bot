@@ -4,10 +4,9 @@ A Discord bot that bridges Discord interactions with SemaphoreUI automation, all
 
 ## Overview
 
-This minimal FastAPI-based Discord bot handles Discord interactions and triggers Ansible playbooks in SemaphoreUI (https://semaphoreui.com/) via custom component interactions.
+This minimal FastAPI-based Discord bot handles Discord interactions and triggers Ansible playbooks in SemaphoreUI (<https://semaphoreui.com/>) via custom component interactions.
 
 ![Bot Demo](demo.gif)
-
 *Interactive Discord bot triggering infrastructure automation through SemaphoreUI*
 
 ## Requirements
@@ -20,12 +19,14 @@ This minimal FastAPI-based Discord bot handles Discord interactions and triggers
 ## Setup
 
 1. **Clone the repository:**
+
    ```sh
    git clone https://github.com/adam-beckett-1999/semaphore-discord-bot.git
    cd semaphore-discord-bot
    ```
 
 2. **Install dependencies:**
+
    ```sh
    pip install -r requirements.txt
    ```
@@ -33,7 +34,8 @@ This minimal FastAPI-based Discord bot handles Discord interactions and triggers
 3. **Configure environment variables:**
 
    Create a `.env` file in the project root:
-   ```
+
+   ```env
    DISCORD_SEMAPHORE_INTERACTIONS_BOT_PUBLIC_KEY=your_discord_app_public_key_here
    SEMAPHORE_VMS_LXCS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
    SEMAPHORE_PVE_CLUSTERS_UPDATE_TRIGGER_URL=your_semaphore_trigger_url_here
@@ -72,9 +74,9 @@ docker run -e DISCORD_SEMAPHORE_INTERACTIONS_BOT_PUBLIC_KEY=your_discord_app_pub
 
 ## Ansible Playbooks
 
-This ties in with my playbooks and roles which can be found here: https://github.com/adam-beckett-1999/Ansible-Playbooks
+This ties in with my playbooks and roles which can be found here: <https://github.com/adam-beckett-1999/Ansible-Playbooks>
 
-Example role: https://github.com/adam-beckett-1999/Ansible-Playbooks/blob/dev/roles/update-report-aggregated-alert/tasks/main.yml
+Example role: <https://github.com/adam-beckett-1999/Ansible-Playbooks/blob/dev/roles/update-report-aggregated-alert/tasks/main.yml>
 
 ```yaml
 - name: Send Discord prompt with styled embed and interactive button via bot API
