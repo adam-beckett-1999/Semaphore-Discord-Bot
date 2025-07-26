@@ -12,7 +12,7 @@ RUN npm install --omit=dev
 COPY app/ ./app
 
 # Install procps for pgrep
-RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache procps
 
 # Healthcheck: check if the bot process is running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
