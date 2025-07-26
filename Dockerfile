@@ -1,4 +1,4 @@
-FROM python:3.14.0rc1-alpine3.22
+FROM python:3.13-alpine3.22
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apk update && apk upgrade
 
 # Install system dependencies
-RUN apk add --no-cache build-base libsodium-dev
+RUN apk add --no-cache build-base libsodium-dev libffi-dev
 
 # Install dependencies
 COPY requirements.txt .
